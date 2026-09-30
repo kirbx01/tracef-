@@ -7,7 +7,7 @@ const LEVELS=[
   {w:5,h:5,c:64,program:''}, {w:7,h:7,c:48,program:''}, {w:10,h:8,c:40,program:''}, {w:16,h:12,c:32,program:''},
   {w:24,h:18,c:32,note:'NO MORE HAND-HOLDING.',program:PROGRAM}];
 
-let level=0, unlocked=0, readyFrames=0, W, H, C, SCALE, OX, OY, program=PROGRAM, jump={};
+let level=0, unlocked=0, readyFrames=0, W, H, C, SCALE, OX, OY, PX=1, program=PROGRAM, jump={};
 
 function loadInstinct(){
   program=LEVELS[level].program||PROGRAM;
@@ -45,6 +45,9 @@ const prog=document.getElementById('eprog'), tag=document.getElementById('tag'),
 let cells, ax, ay, dir, food, steps, state, uiReady=false;
 
 function isInside(x, y){return x>=0 && y>=0 && x<W && y<H;}
+
+function snap(v){return Math.round(v*PX)/PX;}
+function thick(v){return Math.max(v, 1/PX);}
 
 function smells(heading){
   for(let distance=1;distance<=SIGHT;distance++){
@@ -105,12 +108,12 @@ function step(){
 
 function drawBoard(){
   ctx.fillStyle='#fff';
-  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillRect(0,0,VW,VH);
   ctx.strokeStyle='#bbb';
-  ctx.lineWidth=1;
+  ctx.lineWidth=1/PX;
   ctx.beginPath();
-  for(let x=0;x<=W;x++){ctx.moveTo(OX+x*C+0.5, OY);ctx.lineTo(OX+x*C+0.5, OY+H*C);}
-  for(let y=0;y<=H;y++){ctx.moveTo(OX, OY+y*C+0.5);ctx.lineTo(OX+W*C, OY+y*C+0.5);}
+  for(let x=0;x<=W;x++){const p=snap(OX+x*C); ctx.moveTo(p, snap(OY)); ctx.lineTo(p, snap(OY+H*C));}
+  for(let y=0;y<=H;y++){const p=snap(OY+y*C); ctx.moveTo(snap(OX), p); ctx.lineTo(snap(OX+W*C), p);}
   ctx.stroke();
   ctx.fillStyle='#000';
   for(let i=0;i<cells.length;i++) if(cells[i])ctx.fillRect(OX+(i%W)*C, OY+(i/W|0)*C, C, C);
@@ -120,7 +123,7 @@ function drawFood(){
   if(food<0)return;
   const x=OX+(food%W)*C+4*SCALE, y=OY+(food/W|0)*C+4*SCALE, s=C-8*SCALE;
   ctx.fillStyle='#fff'; ctx.fillRect(x, y, s, s);
-  ctx.strokeStyle='#000'; ctx.lineWidth=2*SCALE; ctx.strokeRect(x, y, s, s);
+  ctx.strokeStyle='#000'; ctx.lineWidth=thick(2*SCALE); ctx.strokeRect(x, y, s, s);
 }
 
 function drawAnt(){
@@ -130,7 +133,7 @@ function drawAnt(){
   ctx.beginPath();
   ctx.moveTo(6,0); ctx.lineTo(-4,4.5); ctx.lineTo(-4,-4.5); ctx.closePath();
   ctx.fillStyle='#000'; ctx.fill();
-  ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.stroke();
+  ctx.strokeStyle='#fff'; ctx.lineWidth=thick(1.5); ctx.stroke();
   ctx.restore();
 }
 
@@ -160,7 +163,7 @@ function draw(){
   drawAnt();
   if(state==='win'||state==='over'){
     ctx.fillStyle='rgba(255,255,255,0.72)';
-    ctx.fillRect(0,0,canvas.width,canvas.height); drawAnt();
+    ctx.fillRect(0,0,VW,VH); drawAnt();
   }
   drawStatus();
   if(state==='ready'&&uiReady&&typeof drawReady==='function')drawReady();
@@ -170,8 +173,8 @@ function draw(){
 canvas.addEventListener('click', event=>{
   if(state!=='place'||(typeof overlayOpen==='function'&&overlayOpen()))return;
   const box=canvas.getBoundingClientRect();
-  const x=Math.floor((event.clientX-box.left-OX*box.width/canvas.width)*canvas.width/box.width/C);
-  const y=Math.floor((event.clientY-box.top-OY*box.height/canvas.height)*canvas.height/box.height/C);
+  const x=Math.floor(((event.clientX-box.left)*VW/box.width-OX)/C);
+  const y=Math.floor(((event.clientY-box.top)*VH/box.height-OY)/C);
   if(!isInside(x, y))return;
   if(x===ax && y===ay)return;
   food=y*W+x;
