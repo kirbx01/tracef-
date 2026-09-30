@@ -61,7 +61,7 @@ function smells(heading){
 function reset(){
   const L=LEVELS[level];
   W=L.w; H=L.h; C=L.c; SCALE=C/16;
-  OX=(768-W*C)/2; OY=(576-H*C)/2;
+  OX=(VW-W*C)/2; OY=(VH-H*C)/2;
   cells=new Uint8Array(W*H);
   loadInstinct();
   cells.fill(0);
