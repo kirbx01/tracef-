@@ -1,4 +1,4 @@
-const MAX=200, SIGHT=6, TRAIN=3;
+const MAX=200, SIGHT=6, TRAIN=3, VW=768, VH=576;
 const DX=[0,1,0,-1], DY=[-1,0,1,0];
 
 const PROGRAM=',>,>,[->+<]<<[>>>[-]<<[->>+<<]<[-]]>>>.';
